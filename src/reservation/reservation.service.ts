@@ -129,6 +129,7 @@ export class ReservationService {
       data: {
         ...reservation,
         price: car.pricePerDay * reservation.duration,
+        status: ReservationStatus.PENDING,
         userId,
         issuedAt: new Date(),
       },
