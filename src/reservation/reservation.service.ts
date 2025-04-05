@@ -79,7 +79,7 @@ export class ReservationService {
       include: this.include,
     });
 
-    if (user.role !== 'ADMIN' && user.id === reservation?.userId) {
+    if (user.role !== 'ADMIN' && user.id !== reservation?.userId) {
       throw new ForbiddenException(
         'You are not allowed to view this reservation',
       );
@@ -201,6 +201,34 @@ export class ReservationService {
       },
       include: this.include,
     });
+  }
+
+  public async initiatePayment(id: number) {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        price: true,
+      },
+    });
+    if (!reservation) {
+      throw new BadRequestException('Reservation not found');
+    }
+
+    const payment = await this.paymentService.initiatePayment(
+      reservation.price,
+    );
+    await this.prisma.reservation.update({
+      where: {
+        id,
+      },
+      data: {
+        paymentId: payment.id,
+      },
+    });
+
+    return payment;
   }
 
   public async damagedReservation(id: number) {

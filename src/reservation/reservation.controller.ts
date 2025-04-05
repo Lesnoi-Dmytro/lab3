@@ -226,13 +226,7 @@ export class ReservationController {
   @RequiredRole(Role.USER)
   @Post('/:id/pay/initiate')
   public async initiatePayment(@Param('id', ParseIntPipe) id: number) {
-    const reservation = await this.reservationService.confirmReservation(id);
-
-    if (reservation) {
-      return this.prepareResponse(reservation);
-    } else {
-      return new MessageResponse('Reservation not found');
-    }
+    return this.reservationService.initiatePayment(id);
   }
 
   @ApiOperation({ summary: 'Complete reservation' })
