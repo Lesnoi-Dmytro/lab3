@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `paymentdetails` MODIFY `issuedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);

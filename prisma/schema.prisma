@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root@localhost:3306/car_rental"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            Int     @id @default(autoincrement())
+  name          String
+  email         String  @unique
+  password      String  @db.Char(72)
+  role          Role    @default(USER)
+
+  damagereports DamageReport[]
+  regularUser   RegularUser?
+}
+
+model RegularUser {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @unique
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneNum      String  @db.Char(13)
+  passportId    String
+
+  reservations  Reservation[]
+}
+
+model CarBrand {
+  id            Int     @id @default(autoincrement())
+  name          String
+  cars          Car[]
+}
+
+enum FUEL_TYPE {
+  GASOLINE
+  PETROL
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+
+model CarPhoto {
+  id            Int     @id @default(autoincrement())
+  carId         Int
+  car           Car     @relation(fields: [carId], references: [id])
+  photoUrl      String
+}
+
+model Car {
+  id            Int     @id @default(autoincrement())
+  name          String
+  description   String
+  brandId       Int
+  brand         CarBrand @relation(fields: [brandId], references: [id])
+  year          Int
+  color         String
+  mileage       Int
+  fuelType      FUEL_TYPE
+  isAvailable   Boolean @default(true)
+  pricePerDay   Float
+
+  photos        CarPhoto[]
+  reservations  Reservation[]
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  PAYED
+  REFUNDING
+  DAMAGED
+  COMPLETED
+}
+
+model Reservation {
+  id            Int     @id @default(autoincrement())
+  userId        Int
+  user          RegularUser @relation(fields: [userId], references: [id])
+  carId         Int
+  car           Car     @relation(fields: [carId], references: [id])
+
+  startDate     DateTime
+  duration      Int
+  price         Float
+  status        ReservationStatus @default(PENDING)
+  issuedAt      DateTime  @default(now())
+  
+  paymentId     Int?    @unique
+  payment       PaymentDetails? @relation(fields: [paymentId], references: [id])
+  damageReport  DamageReport?
+}
+
+model DamageReport {
+  id            Int     @id @default(autoincrement())
+  
+  createdBy     Int
+  reporter      User    @relation(fields: [createdBy], references: [id])
+
+  reservationId Int     @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  description   String
+  price         Float
+  date          DateTime
+  photos        DamagePhoto[]
+
+  paymentId     Int?    @unique
+  payment       PaymentDetails? @relation(fields: [paymentId], references: [id])
+}
+
+model DamagePhoto {
+  id            Int     @id @default(autoincrement())
+  damageReportId Int
+  damageReport DamageReport @relation(fields: [damageReportId], references: [id])
+  photoUrl     String
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDING
+  REFUNDED
+}
+
+model PaymentDetails {
+  id            Int     @id @default(autoincrement())
+  amount        Float
+  status        PaymentStatus @default(PENDING)
+  issuedAt      DateTime @default(now())
+
+  reservation   Reservation?
+  damageReport  DamageReport?
+}
+
+model Seed {
+  id            Int     @id
+  date          DateTime @default(now())
+}
